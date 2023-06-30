@@ -32,13 +32,17 @@ pyenv local chat-backend
 
 which generates a `.python-version` file in the current directory.main.py
 
-````
+## Run API
+
+```bash
+uvicorn main:app --reload
+```
 
 ## Permission bash files
 
 ```bash
 sudo chmod -R 755 tasks/pretty_log.sh
-````
+```
 
 ## Parallel Programming
 
