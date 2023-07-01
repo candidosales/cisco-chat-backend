@@ -96,6 +96,5 @@ def query(input_query):
     """
     contexts = retrieve_from_database(input_query, 3)
     prompt = generate_prompt(input_query, contexts)
-    print(prompt)
     answer = chat_bot.get_answer_from_llm(prompt)
     return answer
