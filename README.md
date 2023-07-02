@@ -1,4 +1,12 @@
-# Cisco - ChatGPT - Security Advisories
+# Cisco ChatGPT Security Advisories - Backend
+
+## Project
+
+- [FastAPI](https://fastapi.tiangolo.com/)
+  - [pydantic](https://docs.pydantic.dev/latest/)
+- [OpenAI](https://openai.com/)
+
+- [Frontend](https://github.com/candidosales/cisco-chat-frontend)
 
 ## Set up
 

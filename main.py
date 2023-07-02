@@ -20,8 +20,7 @@ def read_root():
 
 @app.post("/conversation")
 def conversation(conversation: Conversation):
-    # return {"conversation": conversation.messages[0].con
-    # tent.message}
+    # return {"conversation": conversation.messages[0].content.message}
     # return chat_bot.query(conversation.messages[0].content.message)
     return query(conversation.messages[0].content.message)
 
