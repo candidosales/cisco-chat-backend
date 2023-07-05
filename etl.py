@@ -1,9 +1,16 @@
 import csv
-from multiprocessing import Pool
+import os
+import openai
+
 from dotenv import load_dotenv
 
-load_dotenv()
+from dotenv import load_dotenv, find_dotenv
 
+_ = load_dotenv(find_dotenv())  # read local .env file
+
+openai.api_key = os.environ["OPENAI_API_KEY"]
+
+from loaders.text import TextLoader
 from chunckers.text import TextChunker
 from advisory.models import Advisory
 from advisory.utils import mount_advisory_content
@@ -49,7 +56,7 @@ def read_csv(max_items: int):
 
 def add_advisories_db_sync(advisories: list[Advisory]):
     for advisory in advisories:
-        embed_advisories(advisory)
+        embed_advisories_2v(advisory)
     print("Program finished! - sync")
 
 
@@ -145,17 +152,19 @@ def embed_advisories_2v(advisory: Advisory):
         length_function=len,
     )
 
+    loader = TextLoader()
     content = mount_advisory_content(advisory)
-    documents = splitter.split_documents(content)
+
+    document = loader.load_data(advisory.id, advisory.url, content)
+    documents = splitter.split_documents([document])
 
     # Save the texts in the vector database
     embeddings = OpenAIEmbeddings(disallowed_special=())
-    db = Chroma.from_documents(documents, embeddings)
+    db = Chroma.from_documents(documents, embeddings, persist_directory="./db")
     db.persist()
 
 
 if __name__ == "__main__":
     advisories = read_csv(20)
-    print(advisories)
     if len(advisories) > 0:
         add_advisories_db_sync(advisories)

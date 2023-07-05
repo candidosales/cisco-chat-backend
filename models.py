@@ -21,3 +21,8 @@ class Conversation(BaseModel):
     model: str | None = None
     parent_message_id: str | None = None
     streaming: bool = False
+
+
+class Document(BaseModel):
+    page_content: str
+    metadata: dict

@@ -10,7 +10,6 @@ from models import Conversation
 from langchain.docstore.document import Document
 from langchain.chat_models import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
-from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from langchain.schema import BaseMessage
 from langchain.callbacks import AsyncIteratorCallbackHandler
 
@@ -20,12 +19,10 @@ from embedchain import App
 
 chat_bot = App()
 
-callback = AsyncIteratorCallbackHandler()
 chatOpenAI = ChatOpenAI(
+    model="gpt-3.5-turbo-16k",
     max_tokens=1000,
-    streaming=True,
     verbose=True,
-    callbacks=[callback],
 )
 
 # ----- 2v
@@ -52,11 +49,11 @@ def read_root():
 
 @app.post("/conversation")
 async def conversation(conversation: Conversation):
-    print(conversation)
     return query(conversation.messages[0].content.message, conversation.streaming)
     # return get_response(conversation.messages[0].content.message)
 
 
+## TODO - Replace by Database as Retrivier https://twitter.com/cristobal_dev/status/1675745314592915456
 def retrieve_from_database(input_query: str, number_documents: int):
     """
     Queries the vector database based on the given input query.
@@ -123,6 +120,25 @@ def generate_prompt_template():
 # ----- 2v
 
 
+def query_direct(input_query: str):
+    """
+    Queries the vector database based on the given input query.
+    Gets relevant doc based on the query and then passes it to an
+    LLM as context to get the answer.
+
+    :param input_query: The query to use.
+    :return: The answer to the query.
+    """
+    contexts = retrieve_from_database(input_query, 3)
+    prompt_template = generate_prompt_template()
+
+    message = prompt_template.format_messages(
+        query=input_query, context=" | ".join(contexts)
+    )
+
+    return chatOpenAI(message)
+
+
 def query(input_query: str, streaming: bool):
     """
     Queries the vector database based on the given input query.
@@ -146,8 +162,7 @@ def query(input_query: str, streaming: bool):
 
 
 def get_openai_answer(message: list[BaseMessage]):
-    response = chatOpenAI(message)
-    return response.content
+    return chatOpenAI(message)
 
 
 async def send_message(messages: list[BaseMessage]) -> AsyncIterable[str]:

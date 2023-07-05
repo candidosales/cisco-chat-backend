@@ -2,18 +2,20 @@ from bs4 import BeautifulSoup
 
 from embedchain.utils import clean_string
 
+from models import Document
+
 
 class TextLoader:
-    def load_data(self, url: str, id: str, content: str):
+    def load_data(self, id: str, url: str, content: str):
         soup = BeautifulSoup(content, "html.parser")
         output = []
         content = soup.get_text()
         content = clean_string(content)
-        meta_data = {"url": url, "id": id}
+        metadata = {"url": url, "id": id}
         output.append(
             {
-                "content": content,
-                "meta_data": meta_data,
+                "page_content": content,
+                "metadata": metadata,
             }
         )
-        return output
+        return Document(page_content=content, metadata=metadata)
