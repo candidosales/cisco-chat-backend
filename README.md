@@ -39,6 +39,13 @@ pyenv local chat-backend
 
 which generates a `.python-version` file in the current directory.main.py
 
+## Install dependencies
+
+```bash
+pip install -r requirements.txt
+pip install --upgrade -r requirements.txt ## Upgrade
+```
+
 ## Run API
 
 ```bash
