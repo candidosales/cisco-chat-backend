@@ -3,6 +3,6 @@ embedchain==0.0.11
 ruff==0.0.275
 pandas===2.0.3
 fastapi===0.100.0b2
-pydantic===2.0.1
+pydantic===1.10.11
 beautifulsoup4===4.12.2
 langchain===0.0.223

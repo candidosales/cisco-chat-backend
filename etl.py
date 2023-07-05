@@ -4,10 +4,13 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from loaders.web_page import WebPageLoader
-from chunckers.web_page import WebPageChunker
 from chunckers.text import TextChunker
 from advisory.models import Advisory
+from advisory.utils import mount_advisory_content
+
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.embeddings.openai import OpenAIEmbeddings
+from langchain.vectorstores import Chroma
 
 from embedchain import App
 
@@ -44,33 +47,10 @@ def read_csv(max_items: int):
         return advisories
 
 
-def add_into_db(url: str):
-    print("add_into_db", url, flush=True)
-    chat_bot.user_asks.append(["web_page", url])
-    load_and_embed(WebPageLoader(), WebPageChunker(), url)
-
-
-def add_into_db_parallel(urls: list[str]):
-    with Pool() as pool:
-        result = pool.map(add_into_db, urls)
-    print("Program finished!", flush=True)
-
-
-def add_into_db_sync(urls: list[str]):
-    for url in urls:
-        chat_bot.user_asks.append(["web_page", url])
-        load_and_embed(WebPageLoader(), WebPageChunker(), url)
-    print("Program finished! - sync")
-
-
 def add_advisories_db_sync(advisories: list[Advisory]):
     for advisory in advisories:
         embed_advisories(advisory)
     print("Program finished! - sync")
-
-
-def check_output(url: str):
-    return WebPageLoader().load_data(url)
 
 
 def load_and_embed(loader, chunker, url):
@@ -155,6 +135,23 @@ def embed_advisories(advisory: Advisory):
     print(
         f"Successfully saved {advisory.url}. Total chunks count: {chat_bot.collection.count()}"
     )
+
+
+def embed_advisories_2v(advisory: Advisory):
+    # Split the documents
+    splitter = RecursiveCharacterTextSplitter(
+        chunk_size=2000,
+        chunk_overlap=200,
+        length_function=len,
+    )
+
+    content = mount_advisory_content(advisory)
+    documents = splitter.split_documents(content)
+
+    # Save the texts in the vector database
+    embeddings = OpenAIEmbeddings(disallowed_special=())
+    db = Chroma.from_documents(documents, embeddings)
+    db.persist()
 
 
 if __name__ == "__main__":
