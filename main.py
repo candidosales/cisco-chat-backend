@@ -1,12 +1,18 @@
+import uvicorn
+import asyncio
+from typing import AsyncIterable, Awaitable
+
 from dotenv import load_dotenv
 from fastapi import FastAPI
+from fastapi.responses import StreamingResponse
+
 from models import Conversation
 from langchain.docstore.document import Document
 from langchain.chat_models import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
-
-import openai
+from langchain.callbacks import AsyncIteratorCallbackHandler
+from langchain.schema import HumanMessage
 
 # from langchain.vectorstores import Chroma
 # from langchain.chat_models import ChatOpenAI
@@ -42,7 +48,8 @@ def read_root():
 
 
 @app.post("/conversation")
-def conversation(conversation: Conversation):
+async def conversation(conversation: Conversation):
+    print(conversation)
     return query(conversation.messages[0].content.message)
     # return get_response(conversation.messages[0].content.message)
 
@@ -87,7 +94,6 @@ def generate_prompt_template():
 
     :param query: The query to use.
     :param context: Similar documents to the query used as context.
-    :return: The prompt
     """
 
     prompt = """
@@ -130,8 +136,7 @@ def query(input_query: str):
         query=input_query, context=" | ".join(contexts)
     )
 
-    answer = get_openai_answer(message)
-    return answer
+    return get_openai_answer(message)
 
 
 def get_openai_answer(message):
@@ -141,6 +146,9 @@ def get_openai_answer(message):
         streaming=True,
         callbacks=[StreamingStdOutCallbackHandler()],
     )
-
     response = chat(message)
     return response.content
+
+
+if __name__ == "__main__":
+    uvicorn.run(host="0.0.0.0", port=8000, app=app)
