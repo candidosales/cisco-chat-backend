@@ -20,3 +20,4 @@ class Conversation(BaseModel):
     author: Author | None = None
     model: str | None = None
     parent_message_id: str | None = None
+    streaming: bool = False

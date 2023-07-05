@@ -11,19 +11,22 @@ from langchain.docstore.document import Document
 from langchain.chat_models import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
+from langchain.schema import BaseMessage
 from langchain.callbacks import AsyncIteratorCallbackHandler
-from langchain.schema import HumanMessage
-
-# from langchain.vectorstores import Chroma
-# from langchain.chat_models import ChatOpenAI
-# from langchain.chains import ConversationalRetrievalChain
-# from langchain.embeddings.openai import OpenAIEmbeddings
 
 load_dotenv()
 
 from embedchain import App
 
 chat_bot = App()
+
+callback = AsyncIteratorCallbackHandler()
+chatOpenAI = ChatOpenAI(
+    max_tokens=1000,
+    streaming=True,
+    verbose=True,
+    callbacks=[callback],
+)
 
 # ----- 2v
 # ## Initialize db from the disk
@@ -50,7 +53,7 @@ def read_root():
 @app.post("/conversation")
 async def conversation(conversation: Conversation):
     print(conversation)
-    return query(conversation.messages[0].content.message)
+    return query(conversation.messages[0].content.message, conversation.streaming)
     # return get_response(conversation.messages[0].content.message)
 
 
@@ -120,7 +123,7 @@ def generate_prompt_template():
 # ----- 2v
 
 
-def query(input_query: str):
+def query(input_query: str, streaming: bool):
     """
     Queries the vector database based on the given input query.
     Gets relevant doc based on the query and then passes it to an
@@ -136,18 +139,39 @@ def query(input_query: str):
         query=input_query, context=" | ".join(contexts)
     )
 
-    return get_openai_answer(message)
+    if streaming:
+        return StreamingResponse(send_message(message), media_type="text/event-stream")
+    else:
+        return get_openai_answer(message)
 
 
-def get_openai_answer(message):
-    chat = ChatOpenAI(
-        temperature=0.0,
-        max_tokens=1000,
-        streaming=True,
-        callbacks=[StreamingStdOutCallbackHandler()],
-    )
-    response = chat(message)
+def get_openai_answer(message: list[BaseMessage]):
+    response = chatOpenAI(message)
     return response.content
+
+
+async def send_message(messages: list[BaseMessage]) -> AsyncIterable[str]:
+    async def wrap_done(fn: Awaitable, event: asyncio.Event):
+        """Wrap an awaitable with a event to signal when it's done or an exception is raised."""
+        try:
+            await fn
+        except Exception as e:
+            # TODO: handle exception
+            print(f"Caught exception: {e}")
+        finally:
+            # Signal the aiter to stop.
+            event.set()
+
+    # Begin a task that runs in the background.
+    task = asyncio.create_task(
+        wrap_done(chatOpenAI.agenerate([messages]), callback.done),
+    )
+
+    async for token in callback.aiter():
+        # Use server-sent-events to stream the response
+        yield f"data: {token}\n\n"
+
+    await task
 
 
 if __name__ == "__main__":
