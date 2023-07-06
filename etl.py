@@ -1,6 +1,7 @@
 import csv
 import os
 import openai
+import chromadb
 
 from dotenv import load_dotenv
 
@@ -19,7 +20,13 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.vectorstores import Chroma
 
+from chromadb.config import Settings
+
 from embedchain import App
+
+ABS_PATH = os.path.dirname(os.path.abspath(__file__))
+DB_DIR = os.path.join(ABS_PATH, "db")
+persist_directory = DB_DIR
 
 chat_bot = App()
 
@@ -56,7 +63,7 @@ def read_csv(max_items: int):
 
 def add_advisories_db_sync(advisories: list[Advisory]):
     for advisory in advisories:
-        embed_advisories_2v(advisory)
+        embed_advisories(advisory)
     print("Program finished! - sync")
 
 
@@ -158,13 +165,22 @@ def embed_advisories_2v(advisory: Advisory):
     document = loader.load_data(advisory.id, advisory.url, content)
     documents = splitter.split_documents([document])
 
+    # print(documents)
     # Save the texts in the vector database
-    embeddings = OpenAIEmbeddings(disallowed_special=())
-    db = Chroma.from_documents(documents, embeddings, persist_directory="./db")
-    db.persist()
+    # embeddings = OpenAIEmbeddings(disallowed_special=())
+    # db = Chroma.from_documents(
+    #     documents,
+    #     embedding=embeddings,
+    #     persist_directory=persist_directory,
+    # )
+
+    # db.from_documents(documents, embeddings)
+    # db.persist()
 
 
 if __name__ == "__main__":
-    advisories = read_csv(20)
+    limit = 20
+    advisories = read_csv(limit)
     if len(advisories) > 0:
         add_advisories_db_sync(advisories)
+    print(chat_bot.collection.count())

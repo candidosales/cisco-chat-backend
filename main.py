@@ -1,21 +1,27 @@
 import uvicorn
 import asyncio
+
 from typing import AsyncIterable, Awaitable
 
 from dotenv import load_dotenv
 from fastapi import FastAPI
-from fastapi.responses import StreamingResponse
 
 from models import Conversation
 from langchain.docstore.document import Document
 from langchain.chat_models import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
 from langchain.schema import BaseMessage
-from langchain.callbacks import AsyncIteratorCallbackHandler
+from langchain.embeddings.openai import OpenAIEmbeddings
+from langchain.vectorstores import Chroma
+from langchain.chains import RetrievalQA
 
 load_dotenv()
 
 from embedchain import App
+
+# ABS_PATH = os.path.dirname(os.path.abspath(__file__))
+# DB_DIR = os.path.join(ABS_PATH, "db")
+# persist_directory = DB_DIR
 
 chat_bot = App()
 
@@ -75,6 +81,14 @@ def retrieve_from_database(input_query: str, number_documents: int):
     contents = [document[0].page_content for document in result_formatted]
 
     return contents
+
+
+# def retrieve_from_database_2v(input_query: str, number_documents: int):
+#     data = db.get(limit=20)
+#     print("retrieve_from_database_2v", data)
+#     return db.search(
+#         query=input_query, search_type="mmr", kwargs={"k": number_documents}
+#     )
 
 
 def _format_result(results):
@@ -148,7 +162,23 @@ def query(input_query: str, streaming: bool):
     :param input_query: The query to use.
     :return: The answer to the query.
     """
-    contexts = retrieve_from_database(input_query, 3)
+    print("query input_query", input_query)
+
+    contexts = retrieve_from_database(input_query, 8)
+
+    # vectordb = Chroma(
+    #     persist_directory=persist_directory, embedding_function=OpenAIEmbeddings()
+    # )
+
+    # retriever = vectordb.as_retriever()
+
+    # llm = ChatOpenAI(temperature=0)
+    # qa = RetrievalQA.from_chain_type(llm=llm, chain_type="stuff", retriever=retriever)
+    # result = qa.run(input_query)
+    # print("[query]", result)
+    # # print("query contexts", contexts)
+
+    # return ""
     prompt_template = generate_prompt_template()
 
     message = prompt_template.format_messages(

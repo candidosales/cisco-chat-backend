@@ -14,18 +14,17 @@ class BaseAdvisoryChunker:
         ids = []
         loader = TextLoader()
         content = mount_advisory_content(advisory)
-        datas = loader.load_data(advisory.url, advisory.id, content)
+        document = loader.load_data(advisory.url, advisory.id, content)
         metadatas = []
-        for data in datas:
-            content = data["content"]
-            meta_data = data["meta_data"]
-            chunks = self.text_splitter.split_text(content)
-            url = meta_data["url"]
-            for chunk in chunks:
-                chunk_id = hashlib.sha256((chunk + url).encode()).hexdigest()
-                ids.append(chunk_id)
-                documents.append(chunk)
-                metadatas.append(meta_data)
+        content = document.page_content
+        metadata = document.metadata
+        chunks = self.text_splitter.split_text(content)
+        url = metadata["url"]
+        for chunk in chunks:
+            chunk_id = hashlib.sha256((chunk + url).encode()).hexdigest()
+            ids.append(chunk_id)
+            documents.append(chunk)
+            metadatas.append(metadata)
         return {
             "documents": documents,
             "ids": ids,
