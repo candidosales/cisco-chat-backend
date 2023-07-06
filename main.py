@@ -11,6 +11,7 @@ from models import Conversation
 from langchain.docstore.document import Document
 from langchain.chat_models import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
+from langchain.prompts import PromptTemplate
 from langchain.schema import BaseMessage
 from langchain.chains import RetrievalQA
 from langchain.embeddings.openai import OpenAIEmbeddings
@@ -33,11 +34,30 @@ chatOpenAI = ChatOpenAI(
     verbose=True,
 )
 
-retriever = db.as_retriever()
-qa = RetrievalQA.from_chain_type(
-    llm=chatOpenAI, chain_type="stuff", retriever=retriever
+template = """
+        As a digital security expert, I aim to educate laypeople in a clear and simple way about Cisco security advisories. 
+        Use the following pieces of context to answer the query at the end.
+        If you don't know the answer, just say that you don't know, don't try to make up an answer.
+        > Context
+        {context}
+        
+        Can you suggest approaches how to fix it?
+        If necessary, rewrite the answer to make it as didactic as possible.
+        At the end of the answer add the link or URL for more information.
+        > Question: {question}
+        > Helpful Answer:
+        """
+QA_CHAIN_PROMPT = PromptTemplate(
+    input_variables=["context", "question"],
+    template=template,
 )
 
+qa = RetrievalQA.from_chain_type(
+    llm=chatOpenAI,
+    retriever=db.as_retriever(),
+    chain_type_kwargs={"prompt": QA_CHAIN_PROMPT},
+    return_source_documents=True,
+)
 
 chat_bot = App()
 
@@ -90,7 +110,35 @@ def generate_prompt_message(query: str, context: str):
     )
 
 
-def query(input_query: str, streaming=False):
+def get_prompt_template():
+    """
+    Generates a prompt based on the given query and context, ready to be passed to an LLM
+
+    :param query: The query to use.
+    :param context: Similar documents to the query used as context.
+    """
+
+    template = """
+        As a digital security expert, I aim to educate laypeople in a clear and simple way about Cisco security advisories. 
+        Use the following pieces of context to answer the query at the end.
+        If you don't know the answer, just say that you don't know, don't try to make up an answer.
+        > Context
+        ```
+         {context}
+        ```
+        Can you suggest approaches how to fix it?
+        If necessary, rewrite the answer to make it as didactic as possible.
+        At the end of the answer add the link or URL for more information.
+        > Query: ```{query}```
+        > Helpful Answer:
+        """
+    return PromptTemplate(
+        input_variables=["context", "query"],
+        template=template,
+    )
+
+
+def query(input_query: str):
     """
     Queries the vector database based on the given input query.
     Gets relevant doc based on the query and then passes it to an
@@ -99,20 +147,10 @@ def query(input_query: str, streaming=False):
     :param input_query: The query to use.
     :return: The answer to the query.
     """
-
-    documents = retrieve_from_database(input_query, 3)
-    contexts = []
-
-    for doc in documents:
-        contexts.append(doc.page_content)
-
-    ## Create the prompt message
-    message = generate_prompt_message(input_query, " | ".join(contexts))
-
-    return qa.run(message[0].content)
+    return qa({"query": input_query})
 
 
-def query(input_query: str, streaming: bool):
+def query_old(input_query: str, streaming: bool):
     """
     Queries the vector database based on the given input query.
     Gets relevant doc based on the query and then passes it to an
