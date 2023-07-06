@@ -2,6 +2,9 @@ import csv
 import os
 import openai
 
+from time import sleep
+from multiprocessing import Pool
+
 from dotenv import load_dotenv, find_dotenv
 
 _ = load_dotenv(find_dotenv())  # read local .env file
@@ -21,9 +24,8 @@ def read_csv(max_items: int):
     with open("./data/output-2023-06-22T03:37:39.362Z.csv", "r") as file:
         csvreader = csv.reader(file)
         next(csvreader, None)  # Jump the header
-        advisories = []
+        advisories: list[Advisory] = []
         for index, row in enumerate(csvreader):
-            print()
             if index + 1 == max_items:
                 break
             advisories.append(
@@ -64,7 +66,6 @@ def embed_advisories(advisory: Advisory):
     chunker = TextChunker()
     loader = TextLoader()
     embeddings_data = chunker.create_chunks(loader, advisory)
-    print("[load_and_embed] embeddings_data", embeddings_data)
     documents = embeddings_data["documents"]
     metadatas = embeddings_data["metadatas"]
     ids = embeddings_data["ids"]
@@ -92,7 +93,7 @@ def embed_advisories(advisory: Advisory):
 
     chat_bot.collection.add(documents=documents, metadatas=metadatas, ids=ids)
     print(
-        f"\n Successfully saved {advisory.url}. Total chunks count: {chat_bot.collection.count()} \n"
+        f"Successfully saved {advisory.url}. Total chunks count: {chat_bot.collection.count()}\n"
     )
 
 
@@ -100,5 +101,8 @@ if __name__ == "__main__":
     limit = 4697
     advisories = read_csv(limit)
     if len(advisories) > 0:
+        # with Pool() as pool:
+        #     result = pool.map(embed_advisories, advisories)
         add_advisories_db_sync(advisories)
+
     print(f"Successfully saved! Total chunks: {chat_bot.collection.count()} \n")

@@ -51,12 +51,14 @@ def read_root():
 
 @app.post("/conversation")
 async def conversation(conversation: Conversation):
-    return query_2v(conversation.messages[0].content.message, conversation.streaming)
+    return query(conversation.messages[0].content.message, conversation.streaming)
 
 
-def retrieve_from_database_2v(input_query: str, number_documents: int):
+def retrieve_from_database(input_query: str, number_relevant_documents: int):
     return db.search(
-        query=input_query, search_type="mmr", kwargs={"k": number_documents}
+        query=input_query,
+        search_type="mmr",
+        kwargs={"k": number_relevant_documents, "fetch_k": 8},
     )
 
 
@@ -88,7 +90,7 @@ def generate_prompt_message(query: str, context: str):
     )
 
 
-def query_2v(input_query: str, streaming=False):
+def query(input_query: str, streaming=False):
     """
     Queries the vector database based on the given input query.
     Gets relevant doc based on the query and then passes it to an
@@ -98,7 +100,7 @@ def query_2v(input_query: str, streaming=False):
     :return: The answer to the query.
     """
 
-    documents = retrieve_from_database_2v(input_query, 8)
+    documents = retrieve_from_database(input_query, 3)
     contexts = []
 
     for doc in documents:
@@ -119,7 +121,7 @@ def query(input_query: str, streaming: bool):
     :param input_query: The query to use.
     :return: The answer to the query.
     """
-    documents = retrieve_from_database_2v(input_query, 8)
+    documents = retrieve_from_database(input_query, 8)
     contexts = []
 
     for doc in documents:
