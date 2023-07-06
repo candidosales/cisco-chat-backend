@@ -5,15 +5,16 @@ from typing import AsyncIterable, Awaitable
 
 from dotenv import load_dotenv
 from fastapi import FastAPI
+from fastapi.responses import StreamingResponse
 
 from models import Conversation
 from langchain.docstore.document import Document
 from langchain.chat_models import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
 from langchain.schema import BaseMessage
-from langchain.embeddings.openai import OpenAIEmbeddings
-from langchain.vectorstores import Chroma
 from langchain.chains import RetrievalQA
+from langchain.vectorstores.base import VectorStoreRetriever
+from langchain.embeddings.openai import OpenAIEmbeddings
 
 load_dotenv()
 
@@ -23,7 +24,18 @@ from embedchain import App
 # DB_DIR = os.path.join(ABS_PATH, "db")
 # persist_directory = DB_DIR
 
+from langchain.vectorstores import Chroma
+
+db = Chroma(
+    collection_name="embedchain_store",
+    persist_directory="db",
+    embedding_function=OpenAIEmbeddings(),
+)
+print(db._collection.count())
+
 chat_bot = App()
+
+# print(chat_bot.collection.count())
 
 chatOpenAI = ChatOpenAI(
     model="gpt-3.5-turbo-16k",
@@ -37,13 +49,21 @@ chatOpenAI = ChatOpenAI(
 # db = Chroma(embedding_function=embeddings, persist_directory="./db")
 
 # ## Create a retriever function
-# retriever = db.as_retriever(search_type="mmr", search_kwargs={"k": 8})
-
-# ## Set up the model for the QA
+# retriever = chat_bot.db_client.as_retriever(search_type="mmr", search_kwargs={"k": 8})
+# retriever = VectorStoreRetriever(
+#     vectorstore=chat_bot.db,
+#     search_kwargs={"filter": {"type": "filter"}, "k": 1},
+# )
+# # ## Set up the model for the QA
 # llm = ChatOpenAI(temperature=0)
 
-# qa = ConversationalRetrievalChain.from_llm(llm, retriever=retriever)
+# qa = ConversationalRetrievalChain.from_llm(llm, retriever)
+
+
+# result = qa({"question": "I want summary about CVE-2023-20119"})
+# print(result)
 # ----- 2v
+
 
 app = FastAPI()
 
@@ -55,7 +75,7 @@ def read_root():
 
 @app.post("/conversation")
 async def conversation(conversation: Conversation):
-    return query(conversation.messages[0].content.message, conversation.streaming)
+    return query_2v(conversation.messages[0].content.message, conversation.streaming)
     # return get_response(conversation.messages[0].content.message)
 
 
@@ -83,12 +103,10 @@ def retrieve_from_database(input_query: str, number_documents: int):
     return contents
 
 
-# def retrieve_from_database_2v(input_query: str, number_documents: int):
-#     data = db.get(limit=20)
-#     print("retrieve_from_database_2v", data)
-#     return db.search(
-#         query=input_query, search_type="mmr", kwargs={"k": number_documents}
-#     )
+def retrieve_from_database_2v(input_query: str, number_documents: int):
+    return db.search(
+        query=input_query, search_type="mmr", kwargs={"k": number_documents}
+    )
 
 
 def _format_result(results):
@@ -102,7 +120,7 @@ def _format_result(results):
     ]
 
 
-def generate_prompt_template():
+def generate_prompt_message(query: str, context: str):
     """
     Generates a prompt based on the given query and context, ready to be passed to an LLM
 
@@ -120,11 +138,14 @@ def generate_prompt_template():
         ```
         Can you suggest approaches how to fix it?
         If necessary, rewrite the answer to make it as didactic as possible.
+        At the end of the answer add the link or URL for more information.
         > Query: ```{query}```
         > Helpful Answer:
         """
 
-    return ChatPromptTemplate.from_template(prompt)
+    return ChatPromptTemplate.from_template(prompt).format_messages(
+        query=query, context=context
+    )
 
 
 # ----- 2v https://twitter.com/cristobal_dev/status/1675745314592915456
@@ -134,7 +155,26 @@ def generate_prompt_template():
 # ----- 2v
 
 
-def query_direct(input_query: str):
+# def query_direct(input_query: str):
+#     """
+#     Queries the vector database based on the given input query.
+#     Gets relevant doc based on the query and then passes it to an
+#     LLM as context to get the answer.
+
+#     :param input_query: The query to use.
+#     :return: The answer to the query.
+#     """
+#     contexts = retrieve_from_database_2v(input_query, 3)
+#     prompt_template = generate_prompt_template()
+
+#     message = prompt_template.format_messages(
+#         query=input_query, context=" | ".join(contexts)
+#     )
+
+#     return chatOpenAI(message)
+
+
+def query_2v(input_query: str, streaming=False):
     """
     Queries the vector database based on the given input query.
     Gets relevant doc based on the query and then passes it to an
@@ -143,14 +183,22 @@ def query_direct(input_query: str):
     :param input_query: The query to use.
     :return: The answer to the query.
     """
-    contexts = retrieve_from_database(input_query, 3)
-    prompt_template = generate_prompt_template()
 
-    message = prompt_template.format_messages(
-        query=input_query, context=" | ".join(contexts)
+    documents = retrieve_from_database_2v(input_query, 8)
+    contexts = []
+
+    for doc in documents:
+        contexts.append(doc.page_content)
+
+    ## Create the prompt message
+    message = generate_prompt_message(input_query, " | ".join(contexts))
+
+    retriever = db.as_retriever()
+    qa = RetrievalQA.from_chain_type(
+        llm=chatOpenAI, chain_type="stuff", retriever=retriever
     )
 
-    return chatOpenAI(message)
+    return qa.run(message[0].content)
 
 
 def query(input_query: str, streaming: bool):
@@ -162,28 +210,9 @@ def query(input_query: str, streaming: bool):
     :param input_query: The query to use.
     :return: The answer to the query.
     """
-    print("query input_query", input_query)
-
     contexts = retrieve_from_database(input_query, 8)
 
-    # vectordb = Chroma(
-    #     persist_directory=persist_directory, embedding_function=OpenAIEmbeddings()
-    # )
-
-    # retriever = vectordb.as_retriever()
-
-    # llm = ChatOpenAI(temperature=0)
-    # qa = RetrievalQA.from_chain_type(llm=llm, chain_type="stuff", retriever=retriever)
-    # result = qa.run(input_query)
-    # print("[query]", result)
-    # # print("query contexts", contexts)
-
-    # return ""
-    prompt_template = generate_prompt_template()
-
-    message = prompt_template.format_messages(
-        query=input_query, context=" | ".join(contexts)
-    )
+    message = generate_prompt_message(input_query, " | ".join(contexts))
 
     if streaming:
         return StreamingResponse(send_message(message), media_type="text/event-stream")
