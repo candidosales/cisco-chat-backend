@@ -54,7 +54,7 @@ QA_CHAIN_PROMPT = PromptTemplate(
 
 qa = RetrievalQA.from_chain_type(
     llm=chatOpenAI,
-    retriever=db.as_retriever(),
+    retriever=db.as_retriever(search_type="mmr", search_kwargs={"k": 4, "fetch_k": 8}),
     chain_type_kwargs={"prompt": QA_CHAIN_PROMPT},
     return_source_documents=True,
 )
@@ -71,7 +71,7 @@ def read_root():
 
 @app.post("/conversation")
 async def conversation(conversation: Conversation):
-    return query(conversation.messages[0].content.message, conversation.streaming)
+    return query(conversation.messages[0].content.message)
 
 
 def retrieve_from_database(input_query: str, number_relevant_documents: int):
