@@ -15,6 +15,10 @@ from langchain.prompts import PromptTemplate
 from langchain.schema import BaseMessage
 from langchain.chains import RetrievalQA
 from langchain.embeddings.openai import OpenAIEmbeddings
+from models import Message
+from langchain.chains import ConversationalRetrievalChain
+from langchain.memory import ConversationBufferMemory
+
 
 load_dotenv()
 
@@ -35,12 +39,12 @@ chatOpenAI = ChatOpenAI(
 )
 
 template = """
-        As a digital security expert, I aim to educate laypeople in a clear and simple way about Cisco security advisories. 
+        As a digital security expert, I aim to educate laypeople in a clear and simple way about Cisco security advisories.
         Use the following pieces of context to answer the query at the end.
         If you don't know the answer, just say that you don't know, don't try to make up an answer.
         > Context
         {context}
-        
+
         Can you suggest approaches how to fix it?
         If necessary, rewrite the answer to make it as didactic as possible.
         At the end of the answer add the link or URL for more information.
@@ -52,11 +56,30 @@ QA_CHAIN_PROMPT = PromptTemplate(
     template=template,
 )
 
-qa = RetrievalQA.from_chain_type(
+retriever = db.as_retriever(search_type="mmr", search_kwargs={"k": 4, "fetch_k": 8})
+
+## 1v
+# qa = RetrievalQA.from_chain_type(
+#     llm=chatOpenAI,
+#     retriever=retriever,
+#     chain_type_kwargs={"prompt": QA_CHAIN_PROMPT},
+#     return_source_documents=True,
+# )
+
+## 2v Conversational
+
+memory = ConversationBufferMemory(
+    memory_key="chat_history", return_messages=True, output_key="answer"
+)
+
+chain = ConversationalRetrievalChain.from_llm(
     llm=chatOpenAI,
-    retriever=db.as_retriever(search_type="mmr", search_kwargs={"k": 4, "fetch_k": 8}),
-    chain_type_kwargs={"prompt": QA_CHAIN_PROMPT},
+    chain_type="stuff",
+    retriever=retriever,
+    memory=memory,
     return_source_documents=True,
+    return_generated_question=True,
+    combine_docs_chain_kwargs={"prompt": QA_CHAIN_PROMPT},
 )
 
 chat_bot = App()
@@ -71,7 +94,7 @@ def read_root():
 
 @app.post("/conversation")
 async def conversation(conversation: Conversation):
-    return query(conversation.messages[0].content.message)
+    return query(conversation.messages)
 
 
 def retrieve_from_database(input_query: str, number_relevant_documents: int):
@@ -138,7 +161,7 @@ def get_prompt_template():
     )
 
 
-def query(input_query: str):
+def query(messages: list[Message]):
     """
     Queries the vector database based on the given input query.
     Gets relevant doc based on the query and then passes it to an
@@ -147,7 +170,7 @@ def query(input_query: str):
     :param input_query: The query to use.
     :return: The answer to the query.
     """
-    return qa({"query": input_query})
+    return chain({"question": messages[-1].content, "chat_history": []})
 
 
 def query_old(input_query: str, streaming: bool):
