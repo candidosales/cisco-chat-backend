@@ -7,24 +7,19 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.responses import StreamingResponse
 
-from models import Conversation
-from langchain.docstore.document import Document
+from models import Conversation, Message
 from langchain.chat_models import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
 from langchain.prompts import PromptTemplate
 from langchain.schema import BaseMessage
-from langchain.chains import RetrievalQA
 from langchain.embeddings.openai import OpenAIEmbeddings
-from models import Message
 from langchain.chains import ConversationalRetrievalChain
 from langchain.memory import ConversationBufferMemory
-
+from langchain.vectorstores import Chroma
 
 load_dotenv()
 
 from embedchain import App
-
-from langchain.vectorstores import Chroma
 
 db = Chroma(
     collection_name="embedchain_store",
@@ -58,16 +53,6 @@ QA_CHAIN_PROMPT = PromptTemplate(
 
 retriever = db.as_retriever(search_type="mmr", search_kwargs={"k": 4, "fetch_k": 8})
 
-## 1v
-# qa = RetrievalQA.from_chain_type(
-#     llm=chatOpenAI,
-#     retriever=retriever,
-#     chain_type_kwargs={"prompt": QA_CHAIN_PROMPT},
-#     return_source_documents=True,
-# )
-
-## 2v Conversational
-
 memory = ConversationBufferMemory(
     memory_key="chat_history", return_messages=True, output_key="answer"
 )
@@ -83,7 +68,6 @@ chain = ConversationalRetrievalChain.from_llm(
 )
 
 chat_bot = App()
-
 app = FastAPI()
 
 
@@ -95,70 +79,6 @@ def read_root():
 @app.post("/conversation")
 async def conversation(conversation: Conversation):
     return query(conversation.messages)
-
-
-def retrieve_from_database(input_query: str, number_relevant_documents: int):
-    return db.search(
-        query=input_query,
-        search_type="mmr",
-        kwargs={"k": number_relevant_documents, "fetch_k": 8},
-    )
-
-
-def generate_prompt_message(query: str, context: str):
-    """
-    Generates a prompt based on the given query and context, ready to be passed to an LLM
-
-    :param query: The query to use.
-    :param context: Similar documents to the query used as context.
-    """
-
-    prompt = """
-        As a digital security expert, I aim to educate laypeople in a clear and simple way about Cisco security advisories. 
-        Use the following pieces of context to answer the query at the end.
-        If you don't know the answer, just say that you don't know, don't try to make up an answer.
-        > Context
-        ```
-         {context}
-        ```
-        Can you suggest approaches how to fix it?
-        If necessary, rewrite the answer to make it as didactic as possible.
-        At the end of the answer add the link or URL for more information.
-        > Query: ```{query}```
-        > Helpful Answer:
-        """
-
-    return ChatPromptTemplate.from_template(prompt).format_messages(
-        query=query, context=context
-    )
-
-
-def get_prompt_template():
-    """
-    Generates a prompt based on the given query and context, ready to be passed to an LLM
-
-    :param query: The query to use.
-    :param context: Similar documents to the query used as context.
-    """
-
-    template = """
-        As a digital security expert, I aim to educate laypeople in a clear and simple way about Cisco security advisories. 
-        Use the following pieces of context to answer the query at the end.
-        If you don't know the answer, just say that you don't know, don't try to make up an answer.
-        > Context
-        ```
-         {context}
-        ```
-        Can you suggest approaches how to fix it?
-        If necessary, rewrite the answer to make it as didactic as possible.
-        At the end of the answer add the link or URL for more information.
-        > Query: ```{query}```
-        > Helpful Answer:
-        """
-    return PromptTemplate(
-        input_variables=["context", "query"],
-        template=template,
-    )
 
 
 def query(messages: list[Message]):
@@ -173,55 +93,118 @@ def query(messages: list[Message]):
     return chain({"question": messages[-1].content, "chat_history": []})
 
 
-def query_old(input_query: str, streaming: bool):
-    """
-    Queries the vector database based on the given input query.
-    Gets relevant doc based on the query and then passes it to an
-    LLM as context to get the answer.
-
-    :param input_query: The query to use.
-    :return: The answer to the query.
-    """
-    documents = retrieve_from_database(input_query, 8)
-    contexts = []
-
-    for doc in documents:
-        contexts.append(doc.page_content)
-
-    message = generate_prompt_message(input_query, " | ".join(contexts))
-
-    if streaming:
-        return StreamingResponse(send_message(message), media_type="text/event-stream")
-    else:
-        return get_openai_answer(message)
+# def retrieve_from_database(input_query: str, number_relevant_documents: int):
+#     return db.search(
+#         query=input_query,
+#         search_type="mmr",
+#         kwargs={"k": number_relevant_documents, "fetch_k": 8},
+#     )
 
 
-def get_openai_answer(message: list[BaseMessage]):
-    return chatOpenAI(message)
+# def generate_prompt_message(query: str, context: str):
+#     """
+#     Generates a prompt based on the given query and context, ready to be passed to an LLM
+
+#     :param query: The query to use.
+#     :param context: Similar documents to the query used as context.
+#     """
+
+#     prompt = """
+#         As a digital security expert, I aim to educate laypeople in a clear and simple way about Cisco security advisories.
+#         Use the following pieces of context to answer the query at the end.
+#         If you don't know the answer, just say that you don't know, don't try to make up an answer.
+#         > Context
+#         ```
+#          {context}
+#         ```
+#         Can you suggest approaches how to fix it?
+#         If necessary, rewrite the answer to make it as didactic as possible.
+#         At the end of the answer add the link or URL for more information.
+#         > Query: ```{query}```
+#         > Helpful Answer:
+#         """
+
+#     return ChatPromptTemplate.from_template(prompt).format_messages(
+#         query=query, context=context
+#     )
 
 
-async def send_message(messages: list[BaseMessage]) -> AsyncIterable[str]:
-    async def wrap_done(fn: Awaitable, event: asyncio.Event):
-        """Wrap an awaitable with a event to signal when it's done or an exception is raised."""
-        try:
-            await fn
-        except Exception as e:
-            # TODO: handle exception
-            print(f"Caught exception: {e}")
-        finally:
-            # Signal the aiter to stop.
-            event.set()
+# def get_prompt_template():
+#     """
+#     Generates a prompt based on the given query and context, ready to be passed to an LLM
 
-    # Begin a task that runs in the background.
-    task = asyncio.create_task(
-        wrap_done(chatOpenAI.agenerate([messages]), callback.done),
-    )
+#     :param query: The query to use.
+#     :param context: Similar documents to the query used as context.
+#     """
 
-    async for token in callback.aiter():
-        # Use server-sent-events to stream the response
-        yield f"data: {token}\n\n"
+#     template = """
+#         As a digital security expert, I aim to educate laypeople in a clear and simple way about Cisco security advisories.
+#         Use the following pieces of context to answer the query at the end.
+#         If you don't know the answer, just say that you don't know, don't try to make up an answer.
+#         > Context
+#         ```
+#          {context}
+#         ```
+#         Can you suggest approaches how to fix it?
+#         If necessary, rewrite the answer to make it as didactic as possible.
+#         At the end of the answer add the link or URL for more information.
+#         > Query: ```{query}```
+#         > Helpful Answer:
+#         """
+#     return PromptTemplate(
+#         input_variables=["context", "query"],
+#         template=template,
+#     )
 
-    await task
+# def query_old(input_query: str, streaming: bool):
+#     """
+#     Queries the vector database based on the given input query.
+#     Gets relevant doc based on the query and then passes it to an
+#     LLM as context to get the answer.
+
+#     :param input_query: The query to use.
+#     :return: The answer to the query.
+#     """
+#     documents = retrieve_from_database(input_query, 8)
+#     contexts = []
+
+#     for doc in documents:
+#         contexts.append(doc.page_content)
+
+#     message = generate_prompt_message(input_query, " | ".join(contexts))
+
+#     if streaming:
+#         return StreamingResponse(send_message(message), media_type="text/event-stream")
+#     else:
+#         return get_openai_answer(message)
+
+
+# def get_openai_answer(message: list[BaseMessage]):
+#     return chatOpenAI(message)
+
+
+# async def send_message(messages: list[BaseMessage]) -> AsyncIterable[str]:
+#     async def wrap_done(fn: Awaitable, event: asyncio.Event):
+#         """Wrap an awaitable with a event to signal when it's done or an exception is raised."""
+#         try:
+#             await fn
+#         except Exception as e:
+#             # TODO: handle exception
+#             print(f"Caught exception: {e}")
+#         finally:
+#             # Signal the aiter to stop.
+#             event.set()
+
+#     # Begin a task that runs in the background.
+#     task = asyncio.create_task(
+#         wrap_done(chatOpenAI.agenerate([messages]), callback.done),
+#     )
+
+#     async for token in callback.aiter():
+#         # Use server-sent-events to stream the response
+#         yield f"data: {token}\n\n"
+
+#     await task
 
 
 if __name__ == "__main__":
