@@ -1,0 +1,36 @@
+[tool.poetry]
+name = "cisco-chat-backend"
+version = "0.1.0"
+description = "A short description of the package."
+license = "MIT"
+authors = [
+    "Candido Gomes <candidosg@gmail.com>",
+]
+maintainers = [
+    "Candido Gomes <candidosg@gmail.com>",
+]
+readme = "README.md"
+homepage = "https://github.com/candidosales/cisco-chat-backend"
+repository = "https://github.com/candidosales/cisco-chat-backend"
+keywords = ["cisco", "chatgtp", "openai", "langchain"]
+packages = [{include = "app"}]
+
+[tool.poetry.scripts]
+start = "app.main:start"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+python-dotenv = "1.0.0"
+embedchain = "0.0.21"
+ruff = "0.0.278"
+pandas = "2.0.3"
+fastapi = ">=0.85.1 <=0.100.0"
+pydantic = ">=1.10.0 <=1.10.11"
+beautifulsoup4 = "4.12.2"
+langchain = "0.0.232"
+chromadb = ">=0.3.26 <=0.3.29"
+tiktoken = "0.4.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

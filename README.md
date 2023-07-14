@@ -4,7 +4,10 @@
 
 - [FastAPI](https://fastapi.tiangolo.com/)
   - [pydantic](https://docs.pydantic.dev/latest/)
+- [LangChain](https://python.langchain.com/docs/get_started/introduction.html)
 - [OpenAI](https://openai.com/)
+- [ChromaDB](https://www.trychroma.com/)
+- [Embedchain](https://github.com/embedchain/embedchain)
 - [Frontend with SvelteKit](https://github.com/candidosales/cisco-chat-frontend)
 
 ## Set up
@@ -42,14 +45,21 @@ which generates a `.python-version` file in the current directory.main.py
 ## Install dependencies
 
 ```bash
-pip install -r requirements.txt
-pip install --upgrade -r requirements.txt ## Upgrade
+poetry install
 ```
 
-## Run API
+## Activate virtual env
+
+To activate the virtual env, remember to paste the code below in your terminal
 
 ```bash
-uvicorn main:app --reload
+poetry shell
+```
+
+## Run the project
+
+```bash
+poetry run start
 ```
 
 ## Permission bash files
