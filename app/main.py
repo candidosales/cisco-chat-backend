@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.responses import StreamingResponse
 
-from models import Conversation, Message
+from app.models import Conversation, Message
 from langchain.chat_models import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
 from langchain.prompts import PromptTemplate
@@ -91,6 +91,11 @@ def query(messages: list[Message]):
     :return: The answer to the query.
     """
     return chain({"question": messages[-1].content, "chat_history": []})
+
+
+def start():
+    """Launched with `poetry run start` at root level"""
+    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
 
 
 # def retrieve_from_database(input_query: str, number_relevant_documents: int):
@@ -207,5 +212,5 @@ def query(messages: list[Message]):
 #     await task
 
 
-if __name__ == "__main__":
-    uvicorn.run(host="0.0.0.0", port=8000, app=app)
+# if __name__ == "__main__":
+#     uvicorn.run(host="0.0.0.0", port=8000, app=app)

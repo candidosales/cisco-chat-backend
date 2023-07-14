@@ -5,6 +5,8 @@
 - [FastAPI](https://fastapi.tiangolo.com/)
   - [pydantic](https://docs.pydantic.dev/latest/)
 - [OpenAI](https://openai.com/)
+- [ChromaDB](https://www.trychroma.com/)
+- [Embedchain](https://github.com/embedchain/embedchain)
 - [Frontend with SvelteKit](https://github.com/candidosales/cisco-chat-frontend)
 
 ## Set up
@@ -38,6 +40,24 @@ pyenv local chat-backend
 ```
 
 which generates a `.python-version` file in the current directory.main.py
+
+## 2v
+
+### Install dependencies
+
+```bash
+poetry install
+```
+
+### Activate virtual env
+
+To activate the virtual env, remember to paste the code below in your terminal
+
+```bash
+poetry shell
+```
+
+## 1v
 
 ## Install dependencies
 
