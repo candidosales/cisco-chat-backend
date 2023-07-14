@@ -4,6 +4,7 @@
 
 - [FastAPI](https://fastapi.tiangolo.com/)
   - [pydantic](https://docs.pydantic.dev/latest/)
+- [LangChain](https://python.langchain.com/docs/get_started/introduction.html)
 - [OpenAI](https://openai.com/)
 - [ChromaDB](https://www.trychroma.com/)
 - [Embedchain](https://github.com/embedchain/embedchain)
@@ -41,15 +42,13 @@ pyenv local chat-backend
 
 which generates a `.python-version` file in the current directory.main.py
 
-## 2v
-
-### Install dependencies
+## Install dependencies
 
 ```bash
 poetry install
 ```
 
-### Activate virtual env
+## Activate virtual env
 
 To activate the virtual env, remember to paste the code below in your terminal
 
@@ -57,19 +56,10 @@ To activate the virtual env, remember to paste the code below in your terminal
 poetry shell
 ```
 
-## 1v
-
-## Install dependencies
+## Run the project
 
 ```bash
-pip install -r requirements.txt
-pip install --upgrade -r requirements.txt ## Upgrade
-```
-
-## Run API
-
-```bash
-uvicorn main:app --reload
+poetry run start
 ```
 
 ## Permission bash files
