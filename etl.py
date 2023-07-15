@@ -2,20 +2,18 @@ import csv
 import os
 import openai
 
-from time import sleep
-from multiprocessing import Pool
-
 from dotenv import load_dotenv, find_dotenv
-
-_ = load_dotenv(find_dotenv())  # read local .env file
-
-openai.api_key = os.environ["OPENAI_API_KEY"]
 
 from loaders.text import TextLoader
 from chunckers.text import TextChunker
 from advisory.models import Advisory
 
 from embedchain import App
+
+_ = load_dotenv(find_dotenv())  # read local .env file
+
+openai.api_key = os.environ["OPENAI_API_KEY"]
+
 
 chat_bot = App()
 
@@ -92,9 +90,7 @@ def embed_advisories(advisory: Advisory):
         documents, metadatas = zip(*data_dict.values())
 
     chat_bot.collection.add(documents=documents, metadatas=metadatas, ids=ids)
-    print(
-        f"Successfully saved {advisory.url}. Total chunks count: {chat_bot.collection.count()}\n"
-    )
+    print(f"Saved {advisory.url}. Total chunks: {chat_bot.collection.count()}\n")
 
 
 if __name__ == "__main__":
