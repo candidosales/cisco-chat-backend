@@ -62,6 +62,12 @@ poetry shell
 poetry run start
 ```
 
+Using modal to run the container
+
+```bash
+modal serve main.py
+```
+
 ## Permission bash files
 
 ```bash

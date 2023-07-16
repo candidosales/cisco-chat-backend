@@ -1,5 +1,6 @@
 import uvicorn
 import modal
+import datetime
 
 # definition of our container image for jobs on Modal
 # Modal gets really powerful when you start using multiple images!
@@ -18,10 +19,9 @@ stub = modal.Stub(
     ],
     mounts=[
         # we make our local modules available to the container
-        # *modal.create_package_mounts(module_names=["db"])
-        # modal.Mount.from_local_python_packages("models"),
         modal.Mount.from_local_python_packages("models"),
-        modal.Mount.from_local_dir("db", remote_path="/db"),
+        modal.Mount.from_local_dir("db", remote_path="/root/db"),
+        modal.Mount.from_local_dir("db/index", remote_path="/root/db/index"),
     ],
 )
 
@@ -45,7 +45,7 @@ def fastapi_app():
 
     db = Chroma(
         collection_name="embedchain_store",
-        persist_directory="db",
+        persist_directory="/root/db",
         embedding_function=OpenAIEmbeddings(),
     )
 
@@ -95,7 +95,11 @@ def fastapi_app():
 
     @web_app.get("/")
     def index():
-        return {"app": "Cisco ChatGPT - Security Advisories", "status": "ok"}
+        return {
+            "app": "Cisco ChatGPT - Security Advisories",
+            "status": "ok",
+            "timestamp": datetime.datetime.now(),
+        }
 
     @web_app.post("/conversation")
     async def conversation(conversation: Conversation):
