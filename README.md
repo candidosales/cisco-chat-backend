@@ -83,10 +83,6 @@ modal deploy main.py
 sudo chmod -R 755 tasks/pretty_log.sh
 ```
 
-## Parallel Programming
-
-https://www.sitepoint.com/python-multiprocessing-parallel-programming
-
 ## Secrets
 
 Update secret in modal account
@@ -110,3 +106,9 @@ If you want to support Personal Portfolio, you can ☕ [**buy a coffee here**](h
 ## ⚠️ Copyright and license
 
 Code and documentation copyright 2023-2030 the [Authors](https://github.com/candidosales/cisco-chat-backend/graphs/contributors) and Code released under the [MIT License](https://github.com/candidosales/cisco-chat-backend/blob/master/LICENSE). Docs released under [Creative Commons](https://creativecommons.org/licenses/by/3.0/).
+
+## References
+
+- [Deeplearning.ai short courses](https://www.deeplearning.ai/short-courses/);
+- [LLM Bootcamp - Spring 2023](https://fullstackdeeplearning.com/llm-bootcamp/spring-2023/);
+- [Modal examples](https://modal.com/examples);
