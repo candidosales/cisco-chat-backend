@@ -2,6 +2,7 @@
 
 ## Project
 
+- [Crawler to scrap data](https://github.com/candidosales/cisco-crawler-security-advisories)
 - [FastAPI](https://fastapi.tiangolo.com/)
   - [pydantic](https://docs.pydantic.dev/latest/)
 - [LangChain](https://python.langchain.com/docs/get_started/introduction.html)
