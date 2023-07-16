@@ -64,7 +64,6 @@ def fastapi_app():
         > Context
         {context}
 
-        Can you suggest approaches how to fix it?
         If necessary, rewrite the answer to make it as didactic as possible.
         > Question: {question}
         > Helpful Answer:
