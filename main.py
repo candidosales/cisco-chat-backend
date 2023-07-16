@@ -1,4 +1,3 @@
-import uvicorn
 import modal
 import datetime
 
@@ -111,14 +110,9 @@ def fastapi_app():
         :param input_query: The query to use.
         :return: The answer to the query.
         """
+        question = conversation.messages[-1].content
+        conversation.messages.pop()
 
-        return chain(
-            {"question": conversation.messages[-1].content, "chat_history": []}
-        )
+        return chain({"question": question, "chat_history": conversation.messages})
 
     return web_app
-
-
-def start():
-    """Launched with `poetry run start` at root level"""
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

@@ -56,16 +56,18 @@ To activate the virtual env, remember to paste the code below in your terminal
 poetry shell
 ```
 
-## Run the project
-
-```bash
-poetry run start
-```
+## Run the project in dev environment
 
 Using modal to run the container
 
 ```bash
 modal serve main.py
+```
+
+## Deploy
+
+```bash
+modal deploy main.py
 ```
 
 ## Permission bash files
