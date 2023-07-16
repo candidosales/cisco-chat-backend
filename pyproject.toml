@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "cisco-chat-backend"
-version = "0.1.0"
-description = "A short description of the package."
+version = "1.0.0"
+description = "This is an AI chatbot that uses OpenAI and Security Advisories data to interact with the natural language."
 license = "MIT"
 authors = [
     "Candido Gomes <candidosg@gmail.com>",
