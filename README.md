@@ -101,7 +101,7 @@ If you want to say thank you and/or support the active development this project:
 
 ## ☕ Supporters
 
-If you want to support Personal Portfolio, you can ☕ [**buy a coffee here**](https://buymeacoff.ee/candidosales)
+If you want to support this project, you can ☕ [**buy a coffee here**](https://buymeacoff.ee/candidosales)
 
 ## ⚠️ Copyright and license
 
