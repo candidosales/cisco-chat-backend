@@ -13,6 +13,10 @@
 
 [Check out how the fronted was made](https://github.com/candidosales/cisco-chat-frontend)
 
+## Diagram architecture
+
+![Diagram architecture](./docs/diagram-architecture.png)
+
 ## Set up
 
 ### Create and activate the virtual environment
