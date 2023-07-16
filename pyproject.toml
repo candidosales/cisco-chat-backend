@@ -31,6 +31,7 @@ langchain = "0.0.232"
 chromadb = ">=0.3.26 <=0.3.29"
 tiktoken = "0.4.0"
 pre-commit = "^3.3.3"
+modal-client = "^0.50.2632"
 
 [build-system]
 requires = ["poetry-core"]
