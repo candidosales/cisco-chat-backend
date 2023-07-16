@@ -62,6 +62,12 @@ poetry shell
 poetry run start
 ```
 
+Using modal to run the container
+
+```bash
+modal serve main.py
+```
+
 ## Permission bash files
 
 ```bash
@@ -71,3 +77,11 @@ sudo chmod -R 755 tasks/pretty_log.sh
 ## Parallel Programming
 
 https://www.sitepoint.com/python-multiprocessing-parallel-programming
+
+## Secrets
+
+Update secret in modal account
+
+```bash
+modal secret create openai-api-key OPENAI_API_KEY="$OPENAI_API_KEY"
+```
