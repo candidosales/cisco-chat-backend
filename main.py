@@ -60,12 +60,12 @@ def fastapi_app():
         Use the following pieces of context to answer the query at the end.
         If you don't know the answer, just say that you don't know, 
         don't try to make up an answer.
+        Always say "thanks for asking!" at the end of the answer. 
         > Context
         {context}
 
         Can you suggest approaches how to fix it?
         If necessary, rewrite the answer to make it as didactic as possible.
-        At the end of the answer add the link or URL for more information.
         > Question: {question}
         > Helpful Answer:
         """

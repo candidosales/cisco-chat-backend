@@ -6,8 +6,9 @@
   - [pydantic](https://docs.pydantic.dev/latest/)
 - [LangChain](https://python.langchain.com/docs/get_started/introduction.html)
 - [OpenAI](https://openai.com/)
-- [ChromaDB](https://www.trychroma.com/)
+- Database vector: [ChromaDB](https://www.trychroma.com/)
 - [Embedchain](https://github.com/embedchain/embedchain)
+- Deploy: [Modal](https://modal.com/)
 - [Frontend with SvelteKit](https://github.com/candidosales/cisco-chat-frontend)
 
 ## Set up
