@@ -25,7 +25,9 @@ stub = modal.Stub(
 )
 
 
-@stub.function(image=backend_image, container_idle_timeout=300, timeout=600, cpu=2.0)
+@stub.function(
+    image=backend_image, container_idle_timeout=300, timeout=600, cpu=1.0, keep_warm=1
+)
 @modal.asgi_app()
 def fastapi_app():
     from fastapi import FastAPI
