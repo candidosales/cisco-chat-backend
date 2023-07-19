@@ -71,6 +71,7 @@ def fastapi_app():
         template=template,
     )
 
+    # TODO - https://python.langchain.com/docs/modules/data_connection/retrievers/how_to/self_query/
     retriever = db.as_retriever(search_type="mmr", search_kwargs={"k": 4, "fetch_k": 8})
 
     memory = ConversationBufferMemory(

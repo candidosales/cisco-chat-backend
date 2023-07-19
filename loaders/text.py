@@ -11,7 +11,12 @@ class TextLoader:
         output = []
         content = soup.get_text()
         content = clean_string(content)
-        metadata = {"url": url, "id": id}
+        metadata = {
+            "url": url,
+            "id": id,
+        }
+        # TODO - Add more metadata to use self-querying retriever -
+        # severity, firstPublished, cvsScore
         output.append(
             {
                 "page_content": content,
