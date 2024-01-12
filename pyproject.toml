@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "cisco-chat-backend"
-version = "1.0.0"
+version = "1.1.0"
 description = "This is an AI chatbot that uses OpenAI and Security Advisories data to interact with the natural language."
 license = "MIT"
 authors = [
@@ -19,19 +19,19 @@ packages = [{include = "app"}]
 start = "app.main:start"
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = ">=3.10,<3.12"
 python-dotenv = "1.0.0"
 embedchain = "0.0.21"
-ruff = "0.0.278"
-pandas = "2.0.3"
-fastapi = ">=0.85.1 <=0.100.0"
+ruff = "0.1.12"
+pandas = "2.1.4"
+fastapi = "0.109.0"
 pydantic = ">=1.10.0 <=1.10.11"
 beautifulsoup4 = "4.12.2"
-langchain = "0.0.232"
+langchain = "0.0.336"
 chromadb = ">=0.3.26 <=0.3.29"
 tiktoken = "0.4.0"
-pre-commit = "^3.3.3"
-modal-client = "^0.50.2632"
+pre-commit = "^3.6.0"
+modal-client = "0.56.4558"
 
 [build-system]
 requires = ["poetry-core"]
