@@ -4,7 +4,7 @@ import datetime
 # definition of our container image for jobs on Modal
 # Modal gets really powerful when you start using multiple images!
 backend_image = modal.Image.debian_slim(
-    python_version="3.10.11"
+    python_version="3.11.7"
 ).poetry_install_from_file("pyproject.toml")
 
 # we define a Stub to hold all the pieces of our app

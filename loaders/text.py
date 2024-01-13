@@ -1,6 +1,6 @@
 from bs4 import BeautifulSoup
 
-from embedchain.utils import clean_string
+from embedchain.utils.misc import clean_string
 
 from models import Document
 
