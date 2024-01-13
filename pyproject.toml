@@ -19,19 +19,19 @@ packages = [{include = "app"}]
 start = "app.main:start"
 
 [tool.poetry.dependencies]
-python = ">=3.10,<3.12"
+python = ">=3.9,<3.12"
 python-dotenv = "1.0.0"
-embedchain = "0.0.21"
-ruff = "0.1.12"
+embedchain = "0.1.64"
+ruff = "0.1.13"
 pandas = "2.1.4"
 fastapi = "0.109.0"
-pydantic = ">=1.10.0 <=1.10.11"
+pydantic = "2.5.3"
 beautifulsoup4 = "4.12.2"
 langchain = "0.0.336"
-chromadb = ">=0.3.26 <=0.3.29"
+chromadb = "0.4.22"
 tiktoken = "0.4.0"
 pre-commit = "^3.6.0"
-modal-client = "0.56.4558"
+modal-client = "0.56.4584"
 
 [build-system]
 requires = ["poetry-core"]

@@ -14,5 +14,6 @@ __pycache__
 .chroma
 
 /db
+/db-chroma-0.3
 
 .ruff_cache
