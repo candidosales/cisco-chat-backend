@@ -9,7 +9,7 @@ backend_image = modal.Image.debian_slim(
 
 # we define a Stub to hold all the pieces of our app
 # most of the rest of this file just adds features onto this Stub
-stub = modal.Stub(
+app = modal.App(
     name="cisco-chat-backend",
     image=backend_image,
     secrets=[
@@ -25,7 +25,7 @@ stub = modal.Stub(
 )
 
 
-@stub.function(
+@app.function(
     image=backend_image, container_idle_timeout=300, timeout=600, cpu=1.0, keep_warm=1
 )
 @modal.asgi_app()
@@ -53,12 +53,12 @@ def fastapi_app():
     )
 
     template = """
-        As a digital security expert, I aim to educate laypeople in a clear and 
+        As a digital security expert, I aim to educate laypeople in a clear and
         simple way about Cisco security advisories.
         Use the following pieces of context to answer the query at the end.
-        If you don't know the answer, just say that you don't know, 
+        If you don't know the answer, just say that you don't know,
         don't try to make up an answer.
-        Always say "thanks for asking!" at the end of the answer. 
+        Always say "thanks for asking!" at the end of the answer.
         > Context
         {context}
 
