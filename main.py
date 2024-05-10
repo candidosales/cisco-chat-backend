@@ -3,9 +3,12 @@ import datetime
 
 # definition of our container image for jobs on Modal
 # Modal gets really powerful when you start using multiple images!
-backend_image = modal.Image.debian_slim(
-    python_version="3.11.7"
-).poetry_install_from_file("pyproject.toml")
+backend_image = (
+    modal.Image.debian_slim(python_version="3.11.7")
+    .poetry_install_from_file("pyproject.toml")
+    .apt_install("sqlite3", force_build=True)
+    .pip_install("pysqlite3-binary", "sqlite-utils")
+)
 
 # we define a Stub to hold all the pieces of our app
 # most of the rest of this file just adds features onto this Stub
@@ -20,7 +23,10 @@ stub = modal.Stub(
         # we make our local modules available to the container
         modal.Mount.from_local_python_packages("models"),
         modal.Mount.from_local_dir("db", remote_path="/root/db"),
-        modal.Mount.from_local_dir("db/index", remote_path="/root/db/index"),
+        # modal.Mount.from_local_dir(
+        #     "db/ccea0d9e-c7d4-4354-9d57-f9f22baf346f",
+        #     remote_path="/root/db/ccea0d9e-c7d4-4354-9d57-f9f22baf346f",
+        # ),
     ],
 )
 
@@ -41,13 +47,13 @@ def fastapi_app():
     from langchain.vectorstores import Chroma
 
     db = Chroma(
-        collection_name="embedchain_store",
+        collection_name="my-collection",
         persist_directory="/root/db",
         embedding_function=OpenAIEmbeddings(),
     )
 
     chatOpenAI = ChatOpenAI(
-        model="gpt-3.5-turbo-16k",
+        model="gpt-4-turbo",
         max_tokens=1000,
         verbose=True,
     )
