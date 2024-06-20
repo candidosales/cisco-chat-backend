@@ -15,7 +15,11 @@
 
 ## Diagram architecture
 
+### 1v
+
 ![Diagram architecture](./docs/diagram-architecture.png)
+
+### 2v
 
 ## Set up
 
@@ -32,7 +36,7 @@ Virtual environments allow the sharing of Python libraries across environments i
 We create one for this project with:
 
 ```bash
-pyenv virtualenv 3.10 chat-backend
+pyenv virtualenv 3.11 chat-backend
 ```
 
 To start using it, we need to "activate" it:
