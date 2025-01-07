@@ -3,17 +3,13 @@ name = "cisco-chat-backend"
 version = "1.1.0"
 description = "This is an AI chatbot that uses OpenAI and Security Advisories data to interact with the natural language."
 license = "MIT"
-authors = [
-    "Candido Gomes <candidosg@gmail.com>",
-]
-maintainers = [
-    "Candido Gomes <candidosg@gmail.com>",
-]
+authors = ["Candido Gomes <candidosg@gmail.com>"]
+maintainers = ["Candido Gomes <candidosg@gmail.com>"]
 readme = "README.md"
 homepage = "https://github.com/candidosales/cisco-chat-backend"
 repository = "https://github.com/candidosales/cisco-chat-backend"
 keywords = ["cisco", "chatgtp", "openai", "langchain"]
-packages = [{include = "app"}]
+packages = [{ include = "app" }]
 
 [tool.poetry.scripts]
 start = "app.main:start"
@@ -31,7 +27,7 @@ langchain = "0.0.336"
 chromadb = ">=0.3.26 <=0.3.29"
 tiktoken = "0.4.0"
 pre-commit = "^3.6.0"
-modal-client = "0.56.4558"
+modal = "0.71.3"
 
 [build-system]
 requires = ["poetry-core"]
